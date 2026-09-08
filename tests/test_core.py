@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 from agent_repro import (
+    Recorder,
     ReproError,
     build_bundle,
     load_bundle,
@@ -11,6 +12,7 @@ from agent_repro import (
     redact_text,
     render_markdown,
     replay_lines,
+    render_issue_body,
     write_bundle,
 )
 
@@ -83,6 +85,29 @@ def test_empty_trace_is_rejected(tmp_path: Path):
     trace.write_text("\n", encoding="utf-8")
     with pytest.raises(ReproError, match="no events"):
         parse_jsonl(trace)
+
+
+def test_issue_body_contains_report_and_environment_section():
+    body = render_issue_body(build_bundle([{"type": "error", "message": "bad tool output"}]))
+    assert body.startswith("## Agent failure report")
+    assert "## Environment" in body
+
+
+def test_recorder_emits_jsonl_events_and_closes(tmp_path: Path):
+    path = tmp_path / "events.jsonl"
+    with Recorder(path) as recorder:
+        recorder.run("demo", agent="test")
+        recorder.tool_call("search", {"query": "hello"})
+        recorder.error("failed")
+    events = parse_jsonl(path)
+    assert [event["type"] for event in events] == ["run", "tool_call", "error"]
+    assert events[1]["arguments"]["query"] == "hello"
+
+
+def test_recorder_rejects_empty_event_type(tmp_path: Path):
+    with Recorder(tmp_path / "events.jsonl") as recorder:
+        with pytest.raises(ValueError, match="event_type"):
+            recorder.emit("")
 
 
 def test_invalid_bundle_is_rejected(tmp_path: Path):
