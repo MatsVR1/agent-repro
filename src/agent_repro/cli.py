@@ -7,7 +7,7 @@ import json
 import sys
 from pathlib import Path
 
-from .core import ReproError, load_bundle, replay_lines, write_bundle
+from .core import ReproError, load_bundle, render_issue_body, replay_lines, write_bundle
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -26,6 +26,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     replay = subparsers.add_parser("replay", help="Print a deterministic replay plan")
     replay.add_argument("bundle", type=Path, help="Path to bundle.json")
+
+    issue = subparsers.add_parser("issue", help="Print a copy-pasteable GitHub issue body")
+    issue.add_argument("bundle", type=Path, help="Path to bundle.json")
+    issue.add_argument("-o", "--output", type=Path, help="Optional Markdown output path")
     return parser
 
 
@@ -41,6 +45,13 @@ def main(argv: list[str] | None = None) -> int:
             print((args.bundle.parent / "report.md").read_text(encoding="utf-8") if (args.bundle.parent / "report.md").exists() else "\n".join(replay_lines(bundle)))
         elif args.command == "replay":
             print("\n".join(replay_lines(load_bundle(args.bundle))))
+        elif args.command == "issue":
+            body = render_issue_body(load_bundle(args.bundle))
+            if args.output:
+                args.output.write_text(body, encoding="utf-8")
+                print(f"Created {args.output}")
+            else:
+                print(body)
         return 0
     except (ReproError, OSError) as exc:
         print(f"error: {exc}", file=sys.stderr)

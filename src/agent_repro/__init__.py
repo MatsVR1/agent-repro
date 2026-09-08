@@ -1,5 +1,6 @@
 """Safe, replayable failure bundles for AI agents."""
 
+from .recorder import Recorder
 from .core import (
     ReproError,
     build_bundle,
@@ -7,6 +8,7 @@ from .core import (
     parse_jsonl,
     redact,
     redact_text,
+    render_issue_body,
     render_markdown,
     replay_lines,
     write_bundle,
@@ -19,8 +21,10 @@ __all__ = [
     "parse_jsonl",
     "redact",
     "redact_text",
+    "render_issue_body",
     "render_markdown",
     "replay_lines",
+    "Recorder",
     "write_bundle",
 ]
 

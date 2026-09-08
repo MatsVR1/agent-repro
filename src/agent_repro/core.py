@@ -187,6 +187,12 @@ def load_bundle(path: str | Path) -> dict[str, Any]:
     return value
 
 
+def render_issue_body(bundle: Mapping[str, Any]) -> str:
+    """Render a copy-pasteable GitHub issue body with a diagnostic summary."""
+    report = render_markdown(bundle)
+    return "## Agent failure report\n\n" + report + "\n\n## Environment\n\n- Add agent framework and package versions here.\n- Add the command or test used to produce this bundle here.\n"
+
+
 def replay_lines(bundle: Mapping[str, Any]) -> list[str]:
     """Return shell-friendly replay guidance from a bundle."""
     lines = [f"# Replay plan for {bundle.get('run_id', 'unknown')}"]
