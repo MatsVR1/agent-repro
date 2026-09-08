@@ -1,0 +1,5 @@
+{"type":"run","run_id":"checkout-42","status":"failed","agent":"support-refund"}
+{"type":"llm","model":"gpt-4.1-mini","prompt":"Find the refund policy for order 9911","status":"ok"}
+{"type":"tool_call","name":"search_docs","arguments":{"query":"refund policy","api_key":"sk-demo-1234567890-secret"},"status":"ok","result":"Refunds are allowed within 30 days."}
+{"type":"tool_call","name":"issue_refund","arguments":{"order_id":"9911","customer_email":"customer@example.com"},"status":"failed","message":"HTTP 422: refund window is closed"}
+{"type":"error","status":"error","message":"Agent selected a refund action despite the policy result."}
