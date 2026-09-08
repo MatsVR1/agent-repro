@@ -20,6 +20,8 @@ Current agent tooling is increasingly good at collecting traces, but a trace is 
 | Stable run identity | Uses an explicit `run_id` or derives a deterministic content hash. |
 | Human report | Produces an issue-ready Markdown timeline with failure messages. |
 | Replay plan | Prints a deterministic sequence of model, tool, and event steps for reproduction work. |
+| GitHub issue export | Creates a copy-pasteable issue body with timeline, failure summary, and environment placeholders. |
+| Python recorder | Emits JSONL events from custom agents without a framework dependency. |
 | Framework agnostic | Accepts simple JSON objects, so adapters can be built for any agent framework. |
 
 ## Quick start
@@ -49,6 +51,7 @@ Read the generated report or print a replay plan:
 ```bash
 cat incident-42/report.md
 agent-repro replay incident-42/bundle.json
+agent-repro issue incident-42/bundle.json -o incident-42/github-issue.md
 ```
 
 A generated report is suitable for pasting into a GitHub issue, attaching to an internal incident, or committing as a regression fixture. The bundle retains the event order and useful diagnostic fields while applying redaction before writing output.
@@ -64,6 +67,18 @@ The input is newline-delimited JSON. Every line must be an object with a non-emp
 {"type":"error","status":"error","message":"Agent selected an invalid action"}
 ```
 
+The `issue` command turns the bundle into a GitHub-ready Markdown body without opening a browser or contacting GitHub. The Python adapter can instrument a custom agent in a few lines:
+
+```python
+from agent_repro import Recorder
+
+with Recorder("run.jsonl") as trace:
+    trace.run("checkout-42", agent="support-agent")
+    trace.llm("your-model", "Find the refund policy")
+    trace.tool_call("search_docs", {"query": "refund policy", "token": "secret"})
+    trace.error("Tool returned an invalid schema")
+```
+
 The Python API is equally small:
 
 ```python
@@ -72,6 +87,10 @@ from agent_repro import build_bundle, render_markdown
 bundle = build_bundle(events, source_name="production-trace.jsonl")
 markdown = render_markdown(bundle)
 ```
+
+## Launch kit
+
+See [LAUNCH.md](LAUNCH.md) for a 30-second demo, a community-post draft, positioning guidance, and a staged growth plan. Read [SECURITY.md](SECURITY.md) before processing sensitive traces.
 
 ## Safety model and limitations
 
